@@ -112,6 +112,5 @@ uint64_t enumlib_enumerate(int dim, fplll_float maxdist,
         return enumerate150(dim, maxdist, cbfunc, cbsol, cbsubsol, dual, findsubsols);
     if (dim <= 160)
         return enumerate160(dim, maxdist, cbfunc, cbsol, cbsubsol, dual, findsubsols);
-    
     return ~uint64_t(0);
 }

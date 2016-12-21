@@ -33,13 +33,13 @@ struct enumerate_traits
 	static const int SWIRLY1FRACTION = 4;
 };
 
-template<int dimension>
-uint64_t enumerate_dim(
+template<int dimension, bool findsubsols>
+uint64_t enumerate_dim_detail(
 	int dim, float_type maxdist, 
 	std::function<extenum_cb_set_config> cb_set_config,
 	std::function<extenum_cb_process_sol> cb_process_sol,
 	std::function<extenum_cb_process_subsol> cb_process_subsol,
-	bool dual, bool findsubsols
+	bool dual
 	)
 {
 	static const int SWIRLY = enumerate_traits<dimension>::SWIRLY;
@@ -54,7 +54,7 @@ uint64_t enumerate_dim(
 	
 	lat_t lat(globals);
 	
-	cb_set_config(lat.muT[0], dimension, true, &lat.risq[0], &lat.pr[0]);
+	cb_set_config(&lat.muT[0][0], dimension, true, &lat.risq[0], &lat.pr[0]);
 	lat.pr2 = lat.pr;
 	
 	if (enumlib_loglevel >= 1) 
@@ -78,7 +78,7 @@ uint64_t enumerate_dim(
 		{
 			cout << "[";	
 			for (int i = 0; i < 5; ++i) 
-				cout << lat.muT[i*dimension + j] << " \t";
+				cout << lat.muT[i*dimension+j] << " \t";
 			cout << "]" << endl;
 		}
 		cout << "]" << endl;
@@ -102,6 +102,21 @@ uint64_t enumerate_dim(
 	for (int j = 0; j <= dimension; ++j)
 		count += lat._counts[j];
 	return count;
+}
+
+template<int dimension>
+uint64_t enumerate_dim(
+	int dim, float_type maxdist,
+	std::function<extenum_cb_set_config> cb_set_config,
+	std::function<extenum_cb_process_sol> cb_process_sol,
+	std::function<extenum_cb_process_subsol> cb_process_subsol,
+	bool dual, bool findsubsols
+	)
+{
+	if (findsubsols)
+		return enumerate_dim_detail<dimension,true>(dim, maxdist, cb_set_config, cb_process_sol, cb_process_subsol, dual);
+	else
+		return enumerate_dim_detail<dimension,false>(dim, maxdist, cb_set_config, cb_process_sol, cb_process_subsol, dual);
 }
 
 #ifndef ENUMDIMENSION

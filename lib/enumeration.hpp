@@ -82,7 +82,7 @@ extern ctpl::thread_pool threadpool;
 
 
 
-template <int N, int SWIRLY, int SWIRLY2BUF, int SWIRLY1FRACTION>
+template <int N, int SWIRLY, int SWIRLY2BUF, int SWIRLY1FRACTION, bool findsubsols = false>
 struct lattice_enum_t
 {
 	typedef array<float_type, N> fltrow_t;
@@ -165,27 +165,26 @@ struct lattice_enum_t
 	{
 		if (_r[i] > _r[i - 1])
 			_r[i - 1] = _r[i];
-#ifndef NOCOUNTS
-		++_counts[i];
-#endif
 		float_type ci = _sigT[i][i];
 		float_type yi = round(ci);
 		int xi = (int)(yi);
 		yi = ci - yi;
 		float_type li = _l[i + 1] + (yi * yi * risq[i]);
+#ifndef NOCOUNTS
+		++_counts[i];
+#endif
 
-		if (li < _subsolL[i] && li != 0.0)
+		if (findsubsols && li < _subsolL[i] && li != 0.0)
 		{
 			_subsolL[i] = li;
 			_subsol[i][i] = xi;
 			for (int j = i + 1; j < N; ++j)
 				_subsol[i][j] = _x[j];
 		}
-		else
 		if (li > _AA[i])
 			return;
+
 		_Dx[i] = _D2x[i] = (((int)(yi >= 0) & 1) << 1) - 1;
-//		_Dx[i] = _D2x[i] = (((int)(ci >= xi) & 1) << 1) - 1;
 		_c[i] = ci;
 		_x[i] = xi;
 		_l[i] = li;
@@ -231,25 +230,25 @@ struct lattice_enum_t
 	inline void enumerate_recur(i_tag<0, svp, swirl, swirlid>)
 	{
 		static const int i = 0;
-#ifndef NOCOUNTS
-		++_counts[i];
-#endif
 		float_type ci = _sigT[i][i];
 		float_type yi = round(ci);
 		int xi = (int)(yi);
 		yi = ci - yi;
 		float_type li = _l[i + 1] + (yi * yi * risq[i]);
+#ifndef NOCOUNTS
+		++_counts[i];
+#endif
 
-		if (li < _subsolL[i] && li != 0.0)
+		if (findsubsols && li < _subsolL[i] && li != 0.0)
 		{
 			_subsolL[i] = li;
 			_subsol[i][i] = xi;
 			for (int j = i + 1; j < N; ++j)
 				_subsol[i][j] = _x[j];
 		}
-		else
 		if (li > _AA[i])
 			return;
+
 		_Dx[i] = _D2x[i] = (((int)(yi >= 0) & 1) << 1) - 1;
 		_c[i] = ci;
 		_x[i] = xi;
@@ -262,7 +261,6 @@ struct lattice_enum_t
 
 		while (true)
 		{
-			// process sol
 			enumerate_recur(i_tag<i - 1, svp, swirl, swirlid>());
 
 			if (_l[i + 1] == 0.0)
@@ -323,16 +321,23 @@ struct lattice_enum_t
 	{
 		if (_r[i] > _r[i - 1])
 			_r[i - 1] = _r[i];
-#ifndef NOCOUNTS
-		++_counts[i];
-#endif
 
 		float_type ci = _sigT[i][i];
 		float_type yi = round(ci);
 		int xi = (int)(yi);
 		yi = ci - yi;
 		float_type li = _l[i + 1] + (yi * yi * risq[i]);
+#ifndef NOCOUNTS
+		++_counts[i];
+#endif
 
+		if (findsubsols && li < _subsolL[i] && li != 0.0)
+		{
+			_subsolL[i] = li;
+			_subsol[i][i] = xi;
+			for (int j = i + 1; j < N; ++j)
+				_subsol[i][j] = _x[j];
+		}
 		if (li > _AA[i])
 			return;
 		_c[i] = ci;
@@ -340,13 +345,6 @@ struct lattice_enum_t
 		_l[i] = li;
 		_Dx[i] = _D2x[i] = (((int)(yi >= 0) & 1) << 1) - 1;
 
-		if (li < _subsolL[i] && li != 0.0)
-		{
-			_subsolL[i] = li;
-			_subsol[i][i] = xi;
-			for (int j = i + 1; j < N; ++j)
-				_subsol[i][j] = _x[j];
-		}
 
 		for (int j = _r[i - 1]; j > i - 1; --j)
 			_sigT[i - 1][j - 1] = _sigT[i - 1][j] - _x[j] * muT[i - 1][j];
@@ -418,6 +416,9 @@ struct lattice_enum_t
 		_l[N] = 0.0;
 		_counts[N] = 0;
 
+#if 1
+		enumerate_recur(i_tag<N-1, svp, -2, 0>());
+#else
 		auto& swirlys = globals.swirlys;
 		swirlys.resize(2);
 		swirlys[0].clear();
@@ -513,6 +514,7 @@ struct lattice_enum_t
 		}
 #ifndef NOCOUNTS
 //		if (enumlib_loglevel >= 1) cout << "[enumlib] counts: " << _counts << endl;
+#endif
 #endif
 	}
 
