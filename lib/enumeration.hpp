@@ -26,7 +26,7 @@ SOFTWARE.
 #define ENUMLIB_ENUMERATION_HPP
 
 #include "fplll_types.hpp"
-#include "threadpool.hpp"
+#include "thread_pool.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -45,6 +45,7 @@ SOFTWARE.
 #include <memory>
 #include <functional>
 
+//#define SINGLE_THREADED
 //#define NOCOUNTS
 #define NOLOCALUPDATE
 
@@ -78,8 +79,7 @@ extern mutex_type global_mutex;
 extern int enumlib_nrthreads;
 extern int enumlib_loglevel;
 
-extern ctpl::thread_pool threadpool;
-
+extern thread_pool::thread_pool threadpool;
 
 
 template <int N, int SWIRLY, int SWIRLY2BUF, int SWIRLY1FRACTION, bool findsubsols = false>
@@ -416,7 +416,7 @@ struct lattice_enum_t
 		_l[N] = 0.0;
 		_counts[N] = 0;
 
-#if 1
+#ifndef SINGLE_THREADED
 		enumerate_recur(i_tag<N-1, svp, -2, 0>());
 #else
 		auto& swirlys = globals.swirlys;
@@ -517,9 +517,6 @@ struct lattice_enum_t
 #endif
 #endif
 	}
-
-
-
 
 };
 

@@ -40,4 +40,10 @@ uint64_t enumlib_enumerate(int dim, fplll_float maxdist,
     bool dual, bool findsubsols
     );
 
+extern "C" {
+
+void fplll_register_enumlib();
+
+}
+
 #endif

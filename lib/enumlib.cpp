@@ -28,7 +28,7 @@ SOFTWARE.
 
 using namespace std;
 
-ctpl::thread_pool threadpool(std::thread::hardware_concurrency());
+thread_pool::thread_pool threadpool(std::thread::hardware_concurrency());
 
 int enumlib_nrthreads = std::thread::hardware_concurrency();
 int enumlib_loglevel = 0;
@@ -51,7 +51,13 @@ void enumlib_set_numthreads(int th)
     threadpool.resize(th);
 }
 
+extern "C" {
 
+	void fplll_register_enumlib()
+	{
+		fplll::set_external_enumerator(enumlib_enumerate);
+	}
+}
 
 #define ENUMFUNCNAME(DIM) uint64_t enumerate ## DIM (int, float_type, std::function<extenum_cb_set_config>, std::function<extenum_cb_process_sol>, std::function<extenum_cb_process_subsol>, bool, bool);
 

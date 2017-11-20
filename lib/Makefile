@@ -8,16 +8,13 @@ OBJECTS         += enumlib_dim.120.o enumlib_dim.110.o enumlib_dim.100.o enumlib
 OBJECTS         += enumlib_dim.80.o enumlib_dim.70.o enumlib_dim.60.o enumlib_dim.50.o 
 OBJECTS         += enumlib_dim.40.o enumlib_dim.30.o enumlib_dim.20.o
 
-
 CXX ?= g++
-GCCLOCAL ?= boost
-EXEC=/usr/bin/time
-FPLLL ?= ~/git/fplll-dev-me
+FPLLLDIR ?= ../../fplll
 
 CXXFLAGS = -shared -fpic -fPIC -pthread -std=c++11 -march=native -Ofast -pipe $(CXXSPECIALOPTS) $(EXTRA_CXXFLAGS) 
-CXXFLAGS += -I $(FPLLL)
+CXXFLAGS += -I $(FPLLLDIR)
 
-LDFLAGS   += -L $(GCCLOCAL)/lib -lboost_thread -lboost_system -lpthread
+LDFLAGS   += -lpthread
 
 all: build
 
@@ -32,9 +29,5 @@ enumlib_dim.%.o: enumlib_dim.cpp $(HEADERS)
 $(LIBRARY): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $+ $(LIBRARIES) $(LDFLAGS) 
 
-run: build
-	$(EXEC) $(PROGRAM) instances/BKZ-5/d60.base
-
 clean:
-	rm -f $(PROGRAM) $(OBJECTS) *~
-
+	rm -f $(LIBRARY) $(OBJECTS) *~
