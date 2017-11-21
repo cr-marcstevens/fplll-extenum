@@ -416,7 +416,7 @@ struct lattice_enum_t
 		_l[N] = 0.0;
 		_counts[N] = 0;
 
-#ifndef SINGLE_THREADED
+#ifdef SINGLE_THREADED
 		enumerate_recur(i_tag<N-1, svp, -2, 0>());
 #else
 		auto& swirlys = globals.swirlys;
@@ -468,11 +468,15 @@ struct lattice_enum_t
 
 			auto& swirly_ref = swirlys[1];
 			std::atomic<std::size_t> swirly_i(0);
-			auto f = [this, &swirly_ref, &swirly_i, swirly1end](int threadid)
+			unsigned threadid = 0;
+			auto f = [this, &swirly_ref, &swirly_i, swirly1end, &threadid]()
 			{
 				auto mylat = *this;
-				mylat.threadid = threadid;
-				if (enumlib_loglevel >= 2) cout << "[enumlib] Thread " << threadid << " started." << endl;
+				{
+					lock_type lock(globals.mutex);
+					mylat.threadid = threadid++;
+				}
+				if (enumlib_loglevel >= 2) cout << "[enumlib] Thread " << mylat.threadid << " started." << endl;
 				for (int j = 0; j < N - SWIRLY; ++j)
 					mylat._counts[j] = 0;
 				while (true)
@@ -508,7 +512,7 @@ struct lattice_enum_t
 				cout << "[enumlib] threadpool size mismatch!" << enumlib_nrthreads << "!=" << threadpool.size() << endl;
 			for (int i = 0; i < enumlib_nrthreads; ++i)
 				threadpool.push(f);
-			threadpool.wait();
+			threadpool.wait_work();
 
 			swirlys[1].erase(swirlys[1].begin(), swirlys[1].begin() + swirly1end);
 		}

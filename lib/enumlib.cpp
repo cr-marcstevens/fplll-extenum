@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include "fplll_types.hpp"
 #include "enumlib.hpp"
 #include "enumeration.hpp"
 #include <iostream>
@@ -32,6 +33,15 @@ thread_pool::thread_pool threadpool(std::thread::hardware_concurrency());
 
 int enumlib_nrthreads = std::thread::hardware_concurrency();
 int enumlib_loglevel = 0;
+
+uint64_t enumlib_enumerate(int dim, fplll::enumf maxdist,
+    std::function<fplll::extenum_cb_set_config> cbfunc,
+    std::function<fplll::extenum_cb_process_sol> cbsol,
+    std::function<fplll::extenum_cb_process_subsol> cbsubsol,
+    bool dual, bool findsubsols
+    );
+
+extern "C" {
 
 void enumlib_set_loglevel(int level)
 {
@@ -51,13 +61,12 @@ void enumlib_set_numthreads(int th)
     threadpool.resize(th);
 }
 
-extern "C" {
-
-	void fplll_register_enumlib()
-	{
-		fplll::set_external_enumerator(enumlib_enumerate);
-	}
+void fplll_register_enumlib()
+{
+	fplll::set_external_enumerator(enumlib_enumerate);
 }
+
+} // extern "C"
 
 #define ENUMFUNCNAME(DIM) uint64_t enumerate ## DIM (int, float_type, std::function<extenum_cb_set_config>, std::function<extenum_cb_process_sol>, std::function<extenum_cb_process_subsol>, bool, bool);
 

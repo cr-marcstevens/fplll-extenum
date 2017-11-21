@@ -1,4 +1,4 @@
-LIBRARY          = ./enumlib.so
+LIBRARY          = ./libfplll_enumlib.so
 LIBOJBJECTS      =
 HEADERS          = *.hpp
 
@@ -9,12 +9,18 @@ OBJECTS         += enumlib_dim.80.o enumlib_dim.70.o enumlib_dim.60.o enumlib_di
 OBJECTS         += enumlib_dim.40.o enumlib_dim.30.o enumlib_dim.20.o
 
 CXX ?= g++
-FPLLLDIR ?= ../../fplll
 
-CXXFLAGS = -shared -fpic -fPIC -pthread -std=c++11 -march=native -Ofast -pipe $(CXXSPECIALOPTS) $(EXTRA_CXXFLAGS) 
-CXXFLAGS += -I $(FPLLLDIR)
+CXXFLAGS = -shared -fpic -fPIC -pthread -std=c++11 -march=native -O3 -pipe $(CXXSPECIALOPTS) $(EXTRA_CXXFLAGS) 
+LDFLAGS  =
 
-LDFLAGS   += -lpthread
+ifneq ($(VIRTUAL_ENV),)
+CXXFLAGS += -I $(VIRTUAL_ENV)/include
+LDFLAGS  += -L $(VIRTUAL_ENV)/lib
+else
+$(info Warning: environment variable VIRTUAL_ENV is not set!)
+endif
+
+LDFLAGS  += -lpthread -lfplll
 
 all: build
 
@@ -31,3 +37,13 @@ $(LIBRARY): $(OBJECTS)
 
 clean:
 	rm -f $(LIBRARY) $(OBJECTS) *~
+
+ifneq ($(VIRTUAL_ENV),)
+install: $(LIBRARY) enumlib.hpp
+	-mkdir -p $(VIRTUAL_ENV)/include/fplll
+	cp enumlib.hpp $(VIRTUAL_ENV)/include/fplll/
+	cp $(LIBRARY) $(VIRTUAL_ENV)/lib/
+else
+install:
+	@echo "Environment variable VIRTUAL_ENV is not set!"
+endif
